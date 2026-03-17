@@ -70,48 +70,56 @@ public class AuthService {
                 .build();
     }
 
+   // Update login method
     public AuthResponse login(LoginRequest request, String ipAddress) {
-        // Check rate limit first
-        rateLimitService.checkLoginRateLimit(ipAddress);
 
-        log.info("Login attempt for username: {}", request.getUsername());
+    // 1. Check IP rate limit
+    rateLimitService.checkLoginRateLimit(ipAddress);
 
-        try {
-            authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                    request.getUsername(),
-                    request.getPassword()
-                )
-            );
-        } catch (BadCredentialsException e) {
-            log.warn("Login failed - bad credentials: {}", request.getUsername());
-            throw new CustomException(
-                "Invalid username or password", HttpStatus.UNAUTHORIZED);
-        }
+    // 2. Check account lockout
+    accountLockoutService.checkAccountLocked(request.getUsername());
 
-        User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new CustomException(
-                    "User not found", HttpStatus.NOT_FOUND));
+    log.info("Login attempt for username: {}", request.getUsername());
 
-        // Reset rate limit on successful login
-        rateLimitService.resetLoginRateLimit(ipAddress);
-
-        String accessToken = jwtService.generateAccessToken(user.getUsername());
-        String refreshToken = jwtService.generateRefreshToken(user.getUsername());
-
-        redisService.saveToken(
-            "refresh:" + user.getUsername(), refreshToken, 604800000L);
-
-        log.info("Login successful for username: {}", request.getUsername());
-
-        return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .tokenType("Bearer")
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .build();
+    try {
+        authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(
+                request.getUsername(),
+                request.getPassword()
+            )
+        );
+    } catch (BadCredentialsException e) {
+        // Handle failed attempt → may lock account
+        accountLockoutService.handleFailedLogin(request.getUsername());
+        log.warn("Login failed - bad credentials: {}", request.getUsername());
+        throw new CustomException(
+            "Invalid username or password", HttpStatus.UNAUTHORIZED);
     }
+
+    // Reset on successful login
+    accountLockoutService.resetFailedAttempts(request.getUsername());
+    rateLimitService.resetLoginRateLimit(ipAddress);
+
+    User user = userRepository.findByUsername(request.getUsername())
+            .orElseThrow(() -> new CustomException(
+                "User not found", HttpStatus.NOT_FOUND));
+
+    String accessToken = jwtService.generateAccessToken(user.getUsername());
+    String refreshToken = jwtService.generateRefreshToken(user.getUsername());
+
+    redisService.saveToken(
+        "refresh:" + user.getUsername(), refreshToken, 604800000L);
+
+    log.info("Login successful for username: {}", request.getUsername());
+
+    return AuthResponse.builder()
+            .accessToken(accessToken)
+            .refreshToken(refreshToken)
+            .tokenType("Bearer")
+            .username(user.getUsername())
+            .email(user.getEmail())
+            .build();
+}
 
     public String logout(String authHeader) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -163,4 +171,8 @@ public class AuthService {
                 .email(user.getEmail())
                 .build();
     }
+
+    // Account lockout
+    private final AccountLockoutService accountLockoutService;
+
 }
