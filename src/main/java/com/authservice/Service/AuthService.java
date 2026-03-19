@@ -29,57 +29,51 @@ public class AuthService {
     private final RedisTokenService redisService;
     private final AuthenticationManager authenticationManager;
     private final RateLimitService rateLimitService;
+    private final EmailVerificationService emailVerificationService;
+ 
 
-    public AuthResponse register(RegisterRequest request, String ipAddress) {
-        // Check rate limit first
-        rateLimitService.checkRegisterRateLimit(ipAddress);
+    // ─── Update register method ───────────────────────────────
+public String register(RegisterRequest request, String ipAddress) {
 
-        log.info("Registration attempt for username: {}", request.getUsername());
+    rateLimitService.checkRegisterRateLimit(ipAddress);
+    log.info("Registration attempt for: {}", request.getUsername());
 
-        if (userRepository.existsByUsername(request.getUsername())) {
-            log.warn("Registration failed - username exists: {}", request.getUsername());
-            throw new CustomException("Username already taken", HttpStatus.CONFLICT);
-        }
-
-        if (userRepository.existsByEmail(request.getEmail())) {
-            log.warn("Registration failed - email exists: {}", request.getEmail());
-            throw new CustomException("Email already registered", HttpStatus.CONFLICT);
-        }
-
-        User user = User.builder()
-                .username(request.getUsername())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.USER)
-                .build();
-
-        userRepository.save(user);
-        log.info("User registered successfully: {}", request.getUsername());
-
-        String accessToken = jwtService.generateAccessToken(user.getUsername());
-        String refreshToken = jwtService.generateRefreshToken(user.getUsername());
-
-        redisService.saveToken(
-            "refresh:" + user.getUsername(), refreshToken, 604800000L);
-
-        return AuthResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .tokenType("Bearer")
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .build();
+    if (userRepository.existsByUsername(request.getUsername())) {
+        throw new CustomException(
+            "Username already taken", HttpStatus.CONFLICT);
     }
+
+    if (userRepository.existsByEmail(request.getEmail())) {
+        throw new CustomException(
+            "Email already registered", HttpStatus.CONFLICT);
+    }
+
+    // Save user as unverified
+    User user = User.builder()
+            .username(request.getUsername())
+            .email(request.getEmail())
+            .password(passwordEncoder.encode(request.getPassword()))
+            .role(Role.USER)
+            .isVerified(false)
+            .build();
+
+    userRepository.save(user);
+    log.info("User registered (unverified): {}", request.getUsername());
+
+    // Send verification OTP
+    emailVerificationService.sendVerificationOtp(request.getEmail());
+
+    return "Registration successful! " +
+           "Please check your email for verification OTP.";
+}
+
 
     public AuthResponse login(LoginRequest request, String ipAddress) {
 
-    // 1. Check IP rate limit
     rateLimitService.checkLoginRateLimit(ipAddress);
-
-    // 2. Check account lockout
     accountLockoutService.checkAccountLocked(request.getUsername());
 
-    log.info("Login attempt for username: {}", request.getUsername());
+    log.info("Login attempt for: {}", request.getUsername());
 
     try {
         authenticationManager.authenticate(
@@ -89,20 +83,26 @@ public class AuthService {
             )
         );
     } catch (BadCredentialsException e) {
-        // Handle failed attempt → may lock account
         accountLockoutService.handleFailedLogin(request.getUsername());
-        log.warn("Login failed - bad credentials: {}", request.getUsername());
         throw new CustomException(
             "Invalid username or password", HttpStatus.UNAUTHORIZED);
     }
 
-    // Reset on successful login
-    accountLockoutService.resetFailedAttempts(request.getUsername());
-    rateLimitService.resetLoginRateLimit(ipAddress);
-
     User user = userRepository.findByUsername(request.getUsername())
             .orElseThrow(() -> new CustomException(
                 "User not found", HttpStatus.NOT_FOUND));
+
+    // Check email verification
+    if (!user.isVerified()) {
+        log.warn("Unverified login attempt: {}", request.getUsername());
+        throw new CustomException(
+            "Please verify your email before logging in. " +
+            "Check your inbox for the OTP.",
+            HttpStatus.FORBIDDEN);
+    }
+
+    accountLockoutService.resetFailedAttempts(request.getUsername());
+    rateLimitService.resetLoginRateLimit(ipAddress);
 
     String accessToken = jwtService.generateAccessToken(user.getUsername());
     String refreshToken = jwtService.generateRefreshToken(user.getUsername());
@@ -110,7 +110,7 @@ public class AuthService {
     redisService.saveToken(
         "refresh:" + user.getUsername(), refreshToken, 604800000L);
 
-    log.info("Login successful for username: {}", request.getUsername());
+    log.info("Login successful: {}", request.getUsername());
 
     return AuthResponse.builder()
             .accessToken(accessToken)

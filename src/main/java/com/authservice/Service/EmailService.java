@@ -37,4 +37,26 @@ public class EmailService {
             throw new RuntimeException("Failed to send email");
         }
     }
+
+     // ─── Send OTP for Email Verification ─────────────────────
+    public void sendVerificationEmail(String toEmail, String otp) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(toEmail);
+            message.setSubject("Verify Your Email - Auth Service");
+            message.setText(
+                "Hello,\n\n" +
+                "Welcome to Auth Service!\n\n" +
+                "Your email verification OTP is: " + otp + "\n\n" +
+                "This OTP is valid for 10 minutes only.\n\n" +
+                "If you did not create an account, ignore this email.\n\n" +
+                "Regards,\nAuth Service"
+            );
+            mailSender.send(message);
+            log.info("Verification email sent to: {}", toEmail);
+        } catch (Exception e) {
+            log.error("Failed to send verification email to: {}", toEmail, e);
+            throw new RuntimeException("Failed to send email");
+        }
+    }
 }

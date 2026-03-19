@@ -4,6 +4,8 @@ import com.authservice.dto.AuthResponse;
 import com.authservice.dto.LoginRequest;
 import com.authservice.dto.RegisterRequest;
 import com.authservice.Service.AuthService;
+import com.authservice.Service.EmailVerificationService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,8 @@ public class AuthController {
     private final AuthService authService;
 
     private final PasswordResetService passwordResetService;
+    private final EmailVerificationService emailVerificationService;
+
 
 
     // ─── Helper to get IP ─────────────────────────────────────
@@ -34,15 +38,36 @@ public class AuthController {
         return xfHeader.split(",")[0];
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(
-            @Valid @RequestBody RegisterRequest request,
-            HttpServletRequest httpRequest) {
-        String ip = getClientIP(httpRequest);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(authService.register(request, ip));
-    }
+   @PostMapping("/register")
+public ResponseEntity<Map<String, String>> register(
+        @Valid @RequestBody RegisterRequest request,
+        HttpServletRequest httpRequest) {
+    String ip = getClientIP(httpRequest);
+    String message = authService.register(request, ip);
+    return ResponseEntity
+            .status(HttpStatus.CREATED)
+            .body(Map.of("message", message));
+}
+
+// ─── Verify Email ─────────────────────────────────────────
+@PostMapping("/verify-email")
+public ResponseEntity<Map<String, String>> verifyEmail(
+        @RequestBody Map<String, String> request) {
+    String message = emailVerificationService.verifyEmail(
+        request.get("email"),
+        request.get("otp")
+    );
+    return ResponseEntity.ok(Map.of("message", message));
+}
+
+// ─── Resend Verification OTP ──────────────────────────────
+@PostMapping("/resend-verification")
+public ResponseEntity<Map<String, String>> resendVerification(
+        @RequestBody Map<String, String> request) {
+    String message = emailVerificationService
+                        .resendVerificationOtp(request.get("email"));
+    return ResponseEntity.ok(Map.of("message", message));
+}
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(
