@@ -32,6 +32,10 @@ public class User {
     @Column(nullable = false, length = 20)
     private Role role;
 
+    @Column(name = "is_verified", nullable = false)
+    @Builder.Default
+    private boolean isVerified = false;
+
     @Column(name = "failed_attempts", nullable = false)
     @Builder.Default
     private int failedAttempts = 0;
