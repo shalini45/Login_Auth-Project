@@ -1,33 +1,45 @@
-HELP.md
+# ─── Compiled Files ───────────────────────────────────────
 target/
+*.class
+*.jar
+*.war
+*.ear
+
+# ─── Maven ────────────────────────────────────────────────
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
+# ─── IDE Files ────────────────────────────────────────────
+.idea/
 *.iml
-*.ipr
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
+*.iws
 .vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.settings/
+.classpath
+.project
+.factorypath
+
+# ─── Sensitive Files ──────────────────────────────────────
+application.properties
+application-prod.properties
+application-dev.properties
+*.env
+.env
+
+# ─── Logs ─────────────────────────────────────────────────
+logs/
+*.log
+
+# ─── OS Files ─────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── Spring Boot ──────────────────────────────────────────
+spring-shell.log

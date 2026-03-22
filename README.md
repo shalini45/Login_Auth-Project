@@ -108,6 +108,11 @@ Logout → Token blacklisted in Redis
 ---
 
 ## 🚀 Getting Started
+```
+> ⚠️ **Note:** `application.properties` is not included
+> for security reasons. Copy `application.properties.example`
+> to `application.properties` and fill in your values.
+```
 
 ### Prerequisites
 
