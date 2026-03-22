@@ -4,6 +4,10 @@ import com.authservice.Exception.CustomException;
 import com.authservice.Repository.UserRepository;
 import com.authservice.entity.Role;
 import com.authservice.entity.User;
+
+import io.swagger.v3.oas.annotations.Operation;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,8 +28,12 @@ public class AdminController {
         LoggerFactory.getLogger(AdminController.class);
 
     private final UserRepository userRepository;
+    @Tag(name = "Admin", description = "Admin only APIs")
+
 
     // ─── Get all users (ADMIN only) ───────────────────────────
+    @Operation(summary = "Get all users", description = "Returns list of all users. ADMIN only.")
+
     @GetMapping("/users")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<Map<String, Object>>> getAllUsers() {
@@ -47,6 +55,9 @@ public class AdminController {
     }
 
     // ─── Delete user (ADMIN only) ─────────────────────────────
+
+    @Operation(summary = "Delete user", description = "Deletes a user by ID. ADMIN only.")
+
     @DeleteMapping("/users/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> deleteUser(
@@ -66,6 +77,9 @@ public class AdminController {
     }
 
     // ─── Change user role (ADMIN only) ────────────────────────
+
+    @Operation(summary = "Change user role", description = "Changes role of a user. ADMIN only.")
+
     @PutMapping("/users/{id}/role")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> changeUserRole(
@@ -89,6 +103,9 @@ public class AdminController {
     }
 
     // ─── Unlock user account (ADMIN only) ────────────────────
+
+    @Operation(summary = "Unlock account", description = "Unlocks a locked user account. ADMIN only.")
+
     @PutMapping("/users/{id}/unlock")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, String>> unlockAccount(
