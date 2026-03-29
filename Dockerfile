@@ -7,4 +7,4 @@ COPY . .
 RUN chmod +x mvnw
 RUN ./mvnw clean install -DskipTests
 
-CMD ["java", "-jar", "target/auth-service-1.0.0.jar"]
+CMD ["java", "-Xmx512m", "-jar", "target/auth-service-1.0.0.jar"]
