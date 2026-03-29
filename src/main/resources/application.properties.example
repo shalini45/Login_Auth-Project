@@ -33,12 +33,6 @@ spring.mail.properties.mail.smtp.starttls.enable=true
 # ─── Rate Limiting ────────────────────────────────────────
 spring.main.allow-circular-references=true
 
-# ─── Logging ──────────────────────────────────────────────
-logging.level.root=INFO
-logging.level.com.authservice=DEBUG
-logging.file.name=logs/auth-service.log
-logging.pattern.console=%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n
-
 # ─── Swagger ──────────────────────────────────────────────
 springdoc.api-docs.path=/v3/api-docs
 springdoc.swagger-ui.path=/swagger-ui.html

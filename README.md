@@ -55,7 +55,8 @@ microservice architectures at companies like Swiggy, Zomato, and Razorpay.
 | 📩 Password Reset | OTP-based password reset via email |
 | 📝 Swagger Docs | Interactive API documentation |
 | 📊 Logging | Structured logging with SLF4J |
-| ⚠️ Exception Handling | Global exception handler with clean responses |
+| ⚠️ Exception Handling | Global exception handler with clean 
+| 📊 Logging | Structured logging with level-based log separation (INFO/WARN/ERROR) |
 
 ---
 
@@ -73,6 +74,7 @@ microservice architectures at companies like Swiggy, Zomato, and Razorpay.
 | JWT (jjwt) | 0.12.5 | Token Generation |
 | Lombok | Latest | Boilerplate Reduction |
 | Swagger/OpenAPI | 2.5.0 | API Documentation |
+| Logback | Default | Logging Framework |
 | Maven | 3.9.x | Build Tool |
 
 ---
