@@ -30,7 +30,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final RateLimitService rateLimitService;
     private final EmailVerificationService emailVerificationService;
- 
+    private final AccountLockoutService accountLockoutService;
 
     // ─── Update register method ───────────────────────────────
 public String register(RegisterRequest request, String ipAddress) {
@@ -171,8 +171,4 @@ public String register(RegisterRequest request, String ipAddress) {
                 .email(user.getEmail())
                 .build();
     }
-
-    // Account lockout
-    private final AccountLockoutService accountLockoutService;
-
 }
