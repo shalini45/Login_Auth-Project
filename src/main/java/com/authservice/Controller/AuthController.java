@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.Map;
 
@@ -30,6 +31,7 @@ public class AuthController {
     private final AuthService authService;
     private final EmailVerificationService emailVerificationService;
     private final PasswordResetService passwordResetService;
+    private final RedisTemplate<String, String> redisTemplate;
 
     private String getClientIP(HttpServletRequest request) {
         String xfHeader = request.getHeader("X-Forwarded-For");
@@ -164,7 +166,7 @@ public class AuthController {
         ));
     }
 
-    @GetMapping("/api/auth/redis-test")
+    @GetMapping("/redis-test")
 public ResponseEntity<String> testRedis() {
     try {
         redisTemplate.opsForValue().set("test-key", "test-value");
